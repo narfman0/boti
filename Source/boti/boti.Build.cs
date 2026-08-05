@@ -17,6 +17,7 @@ public class boti : ModuleRules
 			"EnhancedInput",
 			"AIModule",
 			"NavigationSystem",
+			"GameplayTasks",
 			"Niagara"
 		});
 
