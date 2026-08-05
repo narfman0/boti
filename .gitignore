@@ -15,3 +15,7 @@ Build/
 # OS
 .DS_Store
 Thumbs.db
+
+# Third-party assets (synced from asset server, not committed)
+Content/Synty/
+Content/ThirdParty/
