@@ -18,7 +18,8 @@ void AEnemyAIController::OnPossess(APawn* InPawn)
 
 	if (BehaviorTreeAsset && BlackboardAsset)
 	{
-		UseBlackboard(BlackboardAsset, Blackboard);
+		UBlackboardComponent* BB = nullptr;
+		UseBlackboard(BlackboardAsset, BB);
 		RunBehaviorTree(BehaviorTreeAsset);
 	}
 
