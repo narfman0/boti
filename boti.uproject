@@ -1,0 +1,23 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "/opt/Linux_Unreal_Engine_5.8.1",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "boti",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "ModelContextProtocol",
+			"Enabled": true
+		},
+		{
+			"Name": "MCPClientToolset",
+			"Enabled": true
+		}
+	]
+}
