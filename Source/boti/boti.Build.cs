@@ -6,6 +6,9 @@ public class boti : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
+		// Expose all subdirectories under the module root for cross-folder includes.
+		PublicIncludePaths.AddRange(new string[] { ModuleDirectory });
+
 		PublicDependencyModuleNames.AddRange(new string[] {
 			"Core",
 			"CoreUObject",
@@ -13,7 +16,8 @@ public class boti : ModuleRules
 			"InputCore",
 			"EnhancedInput",
 			"AIModule",
-			"NavigationSystem"
+			"NavigationSystem",
+			"Niagara"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
