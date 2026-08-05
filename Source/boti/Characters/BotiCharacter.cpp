@@ -1,4 +1,5 @@
 #include "BotiCharacter.h"
+#include "Components/AC_Health.h"
 #include "Components/AC_LockOn.h"
 #include "Components/AC_Posture.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -30,6 +31,7 @@ ABotiCharacter::ABotiCharacter()
 	FollowCamera->bUsePawnControlRotation = false;
 	FollowCamera->FieldOfView             = 75.f;
 
+	HealthComponent  = CreateDefaultSubobject<UAC_Health>(TEXT("HealthComponent"));
 	PostureComponent = CreateDefaultSubobject<UAC_Posture>(TEXT("PostureComponent"));
 	LockOnComponent  = CreateDefaultSubobject<UAC_LockOn>(TEXT("LockOnComponent"));
 
@@ -45,11 +47,18 @@ ABotiCharacter::ABotiCharacter()
 	ParryPostureDamage    = 50.f;
 	RiposteDamage         = 80.f;
 	ParrySparkVFX         = nullptr;
+	BloodwormVFX          = nullptr;
 }
 
 void ABotiCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (HealthComponent)
+	{
+		HealthComponent->OnDowned.AddDynamic(this, &ABotiCharacter::OnDownedCallback);
+		HealthComponent->OnRevived.AddDynamic(this, &ABotiCharacter::OnRevivedCallback);
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -233,10 +242,49 @@ float ABotiCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 	if (bIsInvincible)
 		return 0.f;
 
+	if (HealthComponent && (!HealthComponent->bIsAlive || HealthComponent->bIsDowned))
+		return 0.f;
+
 	FVector HitLocation = GetActorLocation();
 	float FinalDamage = HandleIncomingHit(DamageCauser, DamageAmount, HitLocation);
 
-	return Super::TakeDamage(FinalDamage, DamageEvent, EventInstigator, DamageCauser);
+	if (HealthComponent)
+		HealthComponent->ApplyDamage(FinalDamage);
+
+	return FinalDamage;
+}
+
+// ---------------------------------------------------------------------------
+// Downed / revive callbacks
+// ---------------------------------------------------------------------------
+
+void ABotiCharacter::OnDownedCallback()
+{
+	// Disable all active combat flags while downed.
+	bParryActive      = false;
+	bIsBlocking       = false;
+	bRiposteAvailable = false;
+
+	GetWorldTimerManager().ClearTimer(ParryWindowTimer);
+	GetWorldTimerManager().ClearTimer(RiposteWindowTimer);
+
+	// Spawn bloodworm wound VFX at actor location (placeholder Niagara system).
+	if (BloodwormVFX && GetWorld())
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(), BloodwormVFX, GetActorLocation());
+	}
+
+	// Blueprint listens to HealthComponent->OnDowned to:
+	//   1. Trigger ragdoll / collapse animation montage.
+	//   2. Show the downed vignette + countdown HUD widget.
+	//   3. Fire EnemyBTTask_DownedReact event via a GameplayEvent or direct BT message.
+}
+
+void ABotiCharacter::OnRevivedCallback()
+{
+	// Blueprint listens to HealthComponent->OnRevived to play the get-up montage
+	// and hide the downed HUD widget.
 }
 
 // ---------------------------------------------------------------------------

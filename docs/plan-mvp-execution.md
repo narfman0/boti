@@ -64,15 +64,15 @@ Tasks:
 **Goal:** Dying, going down, and reviving feels tense, not frustrating.
 
 Tasks:
-- [ ] `AC_Health` component: HP float, death/downed delegates
-- [ ] HP → 0: trigger `OnDowned` → collapse ragdoll → 5s countdown widget
-- [ ] Bloodworm VFX: Niagara system, worm-crawl ribbons across wound (placeholder particle)
-- [ ] Revive: at 5s expiry → get-up montage → HP set to 30% → `bIsAlive = true`
-- [ ] Enemy downed-react: `EnemyBTTask_DownedReact` — grunt backs off 1s, elite closes in
-- [ ] Downed HUD: full-screen darkening vignette + countdown text center screen
-- [ ] Death (no revive possible — not in MVP, but stub `bOutOfBloodworms` flag for future)
+- [x] `AC_Health` component: HP float, death/downed delegates (`Components/AC_Health.h/.cpp`)
+- [x] HP → 0: trigger `OnDowned` → 5s countdown → auto-revive (C++ timer in AC_Health)
+- [ ] Bloodworm VFX: Niagara system, worm-crawl ribbons across wound — assign `BloodwormVFX` in BP_Manji (placeholder particle in editor)
+- [x] Revive: at 5s expiry → HP set to 30% → `OnRevived` delegate broadcast; Blueprint plays get-up montage
+- [ ] Enemy downed-react: `EnemyBTTask_DownedReact` — grunt backs off 1s, elite closes in (Sprint 4 BT work)
+- [ ] Downed HUD: full-screen darkening vignette + countdown widget — bind `WBP_DownedOverlay` to `HealthComponent->OnDowned`; poll `GetDownedTimeRemaining()` for the timer display
+- [x] Death stub: `bOutOfBloodworms` flag present on AC_Health; `OnDeath` delegate wired but never fired in MVP
 
-**MCP tasks:** `AC_Health` blueprint, downed state delegate wiring, Niagara placeholder setup
+**MCP tasks (editor):** Assign `BloodwormVFX` placeholder in BP_Manji details panel; create `WBP_DownedOverlay` widget (vignette + countdown text, bound to HealthComponent delegates)
 
 ---
 

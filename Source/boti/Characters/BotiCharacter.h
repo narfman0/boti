@@ -6,6 +6,7 @@
 
 class USpringArmComponent;
 class UCameraComponent;
+class UAC_Health;
 class UAC_Posture;
 class UAC_LockOn;
 class UNiagaraSystem;
@@ -27,6 +28,9 @@ public:
 	UCameraComponent* FollowCamera;
 
 	// --- Components ---
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	UAC_Health* HealthComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	UAC_Posture* PostureComponent;
@@ -83,6 +87,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|VFX")
 	UNiagaraSystem* ParrySparkVFX;
 
+	// Bloodworm wound VFX played on downed — assign in Blueprint (placeholder Niagara system)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|VFX")
+	UNiagaraSystem* BloodwormVFX;
+
 	// --- Actions ---
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
@@ -138,4 +146,10 @@ private:
 
 	void SpawnParrySparkVFX(FVector Location);
 	void ApplyVisceralKill(AActor* Target);
+
+	UFUNCTION()
+	void OnDownedCallback();
+
+	UFUNCTION()
+	void OnRevivedCallback();
 };
