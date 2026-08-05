@@ -1,0 +1,17 @@
+# UE generated directories
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+Build/
+
+# IDE files
+.vs/
+.vscode/
+*.sln
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
