@@ -10,6 +10,10 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraFunctionLibrary.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputActionValue.h"
+#include "InputMappingContext.h"
 
 ABotiCharacter::ABotiCharacter()
 {
@@ -315,4 +319,53 @@ void ABotiCharacter::SpawnParrySparkVFX(FVector Location)
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(), ParrySparkVFX, Location);
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Enhanced Input
+// ---------------------------------------------------------------------------
+
+void ABotiCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Sub =
+			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
+		{
+			if (DefaultMappingContext)
+				Sub->AddMappingContext(DefaultMappingContext, 0);
+		}
+	}
+
+	if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		if (IA_Move)         EIC->BindAction(IA_Move,        ETriggerEvent::Triggered, this, &ABotiCharacter::Move);
+		if (IA_Look)         EIC->BindAction(IA_Look,        ETriggerEvent::Triggered, this, &ABotiCharacter::Look);
+		if (IA_LightAttack)  EIC->BindAction(IA_LightAttack, ETriggerEvent::Started,   this, &ABotiCharacter::LightAttack);
+		if (IA_HeavyAttack)  EIC->BindAction(IA_HeavyAttack, ETriggerEvent::Started,   this, &ABotiCharacter::HeavyAttack);
+		if (IA_Dodge)        EIC->BindAction(IA_Dodge,       ETriggerEvent::Started,   this, &ABotiCharacter::DodgeRoll);
+		if (IA_Parry)        EIC->BindAction(IA_Parry,       ETriggerEvent::Started,   this, &ABotiCharacter::Parry);
+		if (IA_Block)        EIC->BindAction(IA_Block,       ETriggerEvent::Started,   this, &ABotiCharacter::StartBlock);
+		if (IA_Block)        EIC->BindAction(IA_Block,       ETriggerEvent::Completed,  this, &ABotiCharacter::EndBlock);
+		if (IA_LockOn)       EIC->BindAction(IA_LockOn,      ETriggerEvent::Started,   this, &ABotiCharacter::ToggleLockOn);
+		if (IA_Riposte)      EIC->BindAction(IA_Riposte,     ETriggerEvent::Started,   this, &ABotiCharacter::Riposte);
+	}
+}
+
+void ABotiCharacter::Move(const FInputActionValue& Value)
+{
+	const FVector2D MoveVec = Value.Get<FVector2D>();
+	if (!Controller) return;
+	const FRotator Yaw(0, Controller->GetControlRotation().Yaw, 0);
+	AddMovementInput(FRotationMatrix(Yaw).GetUnitAxis(EAxis::X), MoveVec.Y);
+	AddMovementInput(FRotationMatrix(Yaw).GetUnitAxis(EAxis::Y), MoveVec.X);
+}
+
+void ABotiCharacter::Look(const FInputActionValue& Value)
+{
+	const FVector2D LookVec = Value.Get<FVector2D>();
+	AddControllerYawInput(LookVec.X);
+	AddControllerPitchInput(LookVec.Y);
 }

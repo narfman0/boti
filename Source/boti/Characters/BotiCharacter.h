@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "InputActionValue.h"
 #include "BotiCharacter.generated.h"
 
 class USpringArmComponent;
@@ -12,6 +13,8 @@ class UAC_LockOn;
 class UAC_HitStop;
 class UAC_PostProcess;
 class UNiagaraSystem;
+class UInputMappingContext;
+class UInputAction;
 
 UCLASS()
 class BOTI_API ABotiCharacter : public ACharacter
@@ -45,6 +48,38 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	UAC_PostProcess* PostProcessComponent;
+
+	// --- Enhanced Input ---
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputMappingContext* DefaultMappingContext;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* IA_Move;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* IA_Look;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* IA_LightAttack;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* IA_HeavyAttack;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* IA_Dodge;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* IA_Parry;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* IA_Block;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* IA_LockOn;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* IA_Riposte;
 
 	// --- Movement ---
 
@@ -140,8 +175,13 @@ public:
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	                         AController* EventInstigator, AActor* DamageCauser) override;
 
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
 protected:
 	virtual void BeginPlay() override;
+
+	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
 
 private:
 	FTimerHandle InvincibilityTimer;
