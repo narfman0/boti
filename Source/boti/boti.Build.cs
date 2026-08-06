@@ -18,7 +18,10 @@ public class boti : ModuleRules
 			"AIModule",
 			"NavigationSystem",
 			"GameplayTasks",
-			"Niagara"
+			"Niagara",
+			"UMG",
+			"Slate",
+			"SlateCore"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

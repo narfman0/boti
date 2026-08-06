@@ -2,6 +2,9 @@
 #include "Components/AC_Health.h"
 #include "Components/AC_LockOn.h"
 #include "Components/AC_Posture.h"
+#include "Components/AC_PostProcess.h"
+#include "Combat/AC_HitStop.h"
+#include "VFX/BotiVFXLibrary.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -31,9 +34,11 @@ ABotiCharacter::ABotiCharacter()
 	FollowCamera->bUsePawnControlRotation = false;
 	FollowCamera->FieldOfView             = 75.f;
 
-	HealthComponent  = CreateDefaultSubobject<UAC_Health>(TEXT("HealthComponent"));
-	PostureComponent = CreateDefaultSubobject<UAC_Posture>(TEXT("PostureComponent"));
-	LockOnComponent  = CreateDefaultSubobject<UAC_LockOn>(TEXT("LockOnComponent"));
+	HealthComponent       = CreateDefaultSubobject<UAC_Health>(TEXT("HealthComponent"));
+	PostureComponent      = CreateDefaultSubobject<UAC_Posture>(TEXT("PostureComponent"));
+	LockOnComponent       = CreateDefaultSubobject<UAC_LockOn>(TEXT("LockOnComponent"));
+	HitStopComponent      = CreateDefaultSubobject<UAC_HitStop>(TEXT("HitStopComponent"));
+	PostProcessComponent  = CreateDefaultSubobject<UAC_PostProcess>(TEXT("PostProcessComponent"));
 
 	MoveSpeed           = 600.f;
 	bIsLockedOn         = false;
@@ -192,6 +197,9 @@ float ABotiCharacter::HandleIncomingHit(AActor* Attacker, float RawDamage, FVect
 
 		SpawnParrySparkVFX(HitLocation);
 
+		if (HitStopComponent)
+			HitStopComponent->ApplyParryHitStop();
+
 		if (Attacker)
 		{
 			UAC_Posture* AttackerPosture = Attacker->FindComponentByClass<UAC_Posture>();
@@ -251,6 +259,10 @@ float ABotiCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 	if (HealthComponent)
 		HealthComponent->ApplyDamage(FinalDamage);
 
+	// Normal (unguarded) hit — apply short hit-stop.
+	if (FinalDamage > 0.f && HitStopComponent)
+		HitStopComponent->ApplyNormalHitStop();
+
 	return FinalDamage;
 }
 
@@ -260,7 +272,6 @@ float ABotiCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 
 void ABotiCharacter::OnDownedCallback()
 {
-	// Disable all active combat flags while downed.
 	bParryActive      = false;
 	bIsBlocking       = false;
 	bRiposteAvailable = false;
@@ -268,23 +279,20 @@ void ABotiCharacter::OnDownedCallback()
 	GetWorldTimerManager().ClearTimer(ParryWindowTimer);
 	GetWorldTimerManager().ClearTimer(RiposteWindowTimer);
 
-	// Spawn bloodworm wound VFX at actor location (placeholder Niagara system).
 	if (BloodwormVFX && GetWorld())
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(), BloodwormVFX, GetActorLocation());
 	}
 
-	// Blueprint listens to HealthComponent->OnDowned to:
-	//   1. Trigger ragdoll / collapse animation montage.
-	//   2. Show the downed vignette + countdown HUD widget.
-	//   3. Fire EnemyBTTask_DownedReact event via a GameplayEvent or direct BT message.
+	if (PostProcessComponent)
+		PostProcessComponent->SetDownedEffect(true);
 }
 
 void ABotiCharacter::OnRevivedCallback()
 {
-	// Blueprint listens to HealthComponent->OnRevived to play the get-up montage
-	// and hide the downed HUD widget.
+	if (PostProcessComponent)
+		PostProcessComponent->SetDownedEffect(false);
 }
 
 // ---------------------------------------------------------------------------
@@ -298,6 +306,10 @@ void ABotiCharacter::EndInvincibility()
 
 void ABotiCharacter::SpawnParrySparkVFX(FVector Location)
 {
+	// Prefer the VFX library soft-ref (set via DefaultGame.ini or Blueprint CDO).
+	UBotiVFXLibrary::SpawnParrySpark(this, Location);
+
+	// Fallback: direct Niagara system assigned in the character Blueprint.
 	if (ParrySparkVFX && GetWorld())
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(

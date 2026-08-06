@@ -9,6 +9,8 @@ class UCameraComponent;
 class UAC_Health;
 class UAC_Posture;
 class UAC_LockOn;
+class UAC_HitStop;
+class UAC_PostProcess;
 class UNiagaraSystem;
 
 UCLASS()
@@ -37,6 +39,12 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	UAC_LockOn* LockOnComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	UAC_HitStop* HitStopComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	UAC_PostProcess* PostProcessComponent;
 
 	// --- Movement ---
 
