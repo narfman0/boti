@@ -3,6 +3,8 @@
 #include "Components/AC_Posture.h"
 #include "AIController.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Game/BotiGameMode.h"
 
 AEnemyAnotsu::AEnemyAnotsu()
 {
@@ -71,6 +73,14 @@ void AEnemyAnotsu::SetPhase(int32 NewPhase)
 
 	CurrentPhase = NewPhase;
 	OnPhaseChanged.Broadcast(NewPhase);
+
+	if (NewPhase == 2)
+	{
+		if (ABotiGameMode* GM = Cast<ABotiGameMode>(UGameplayStatics::GetGameMode(this)))
+		{
+			GM->StartBossPhase2();
+		}
+	}
 	// Blueprint: update BB_Enemy "AnotsuPhase" key, play phase-transition VFX.
 }
 
@@ -86,6 +96,13 @@ void AEnemyAnotsu::TriggerEscape()
 	}
 
 	OnEscapeTriggered.Broadcast();
+
+	// Notify game mode to start the win sequence
+	if (ABotiGameMode* GM = Cast<ABotiGameMode>(UGameplayStatics::GetGameMode(this)))
+	{
+		GM->TriggerBossEscape();
+	}
+
 	// Blueprint / Sequencer: play escape montage → shoji smash → fade to cutscene.
 }
 
